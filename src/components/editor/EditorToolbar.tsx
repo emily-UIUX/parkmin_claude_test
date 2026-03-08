@@ -99,7 +99,8 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
     if (!file) return
     const reader = new FileReader()
     reader.onload = () => {
-      editor.chain().focus().setImage({ src: reader.result as string }).run()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(editor.chain().focus() as any).setImage({ src: reader.result as string }).run()
     }
     reader.readAsDataURL(file)
     e.target.value = ''
@@ -160,7 +161,8 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
             <ToolBtn icon={Underline} onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive('underline')} title="밑줄 (⌘U)" />
             <ToolBtn icon={Strikethrough} onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title="취소선" />
             <Sep />
-            <ToolBtn icon={Highlighter} onClick={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive('highlight')} title="형광펜" />
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <ToolBtn icon={Highlighter} onClick={() => (editor.chain().focus() as any).toggleHighlight().run()} active={editor.isActive('highlight')} title="형광펜" />
             <ToolBtn icon={Code} onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')} title="인라인 코드" />
             <Sep />
             <ToolBtn

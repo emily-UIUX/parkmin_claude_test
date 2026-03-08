@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Pen, Highlighter, Eraser, Type, ImagePlus,
-  ZoomIn, ZoomOut, Trash2, Maximize2,
+  ZoomIn, ZoomOut, Maximize2,
   SquareDashedMousePointer, Shapes,
   StickyNote as StickyNoteIcon,
   AlignLeft, AlignCenter, AlignRight,
@@ -80,11 +80,6 @@ const STICKY_COLORS_LIGHT = ['#fef08a', '#fda4af', '#86efac', '#93c5fd', '#c4b5f
 const STICKY_COLORS_DARK  = ['#92400e', '#9f1239', '#166534', '#1e3a8a', '#4c1d95', '#7c2d12']
 
 // 텍스트 박스 색상 팔레트 (편집 툴바)
-const TEXT_COLORS = [
-  '#1a1a1a', '#374151', '#dc2626', '#f97316',
-  '#eab308', '#16a34a', '#2563eb', '#7c3aed',
-]
-
 const WIDTHS = [2, 4, 6, 10, 16]
 
 let _idCtr = 0
@@ -177,7 +172,7 @@ export function DrawingCanvas({ initialData, onChange }: DrawingCanvasProps) {
   const [penColorIdx, setPenColorIdx]       = useState(0)
   const [hlColorIdx, setHlColorIdx]         = useState(1)   // 1 = 노랑
   const [penWidth, setPenWidth]             = useState(4)
-  const [activeCategory, setActiveCategory] = useState<Category | null>('pen')
+  const [_activeCategory, setActiveCategory] = useState<Category | null>('pen')
   const [stickyColor, setStickyColor]       = useState(STICKY_COLORS_LIGHT[0])
 
   // 파생 색상 (렌더마다 계산)
@@ -1374,19 +1369,6 @@ export function DrawingCanvas({ initialData, onChange }: DrawingCanvasProps) {
     setFocusedBoxId(id)
   }, [toWorld, syncTextBoxes, textDefAlign, textDefBlockType])
 
-  const updateFocusedBox = useCallback((changes: Partial<TextBox>) => {
-    if (!focusedBoxId) return
-    syncTextBoxes(textBoxesRef.current.map(tb =>
-      tb.id === focusedBoxId ? { ...tb, ...changes } : tb
-    ))
-  }, [focusedBoxId, syncTextBoxes])
-
-  const deleteFocusedBox = useCallback(() => {
-    if (!focusedBoxId) return
-    const id = focusedBoxId; setFocusedBoxId(null)
-    syncTextBoxes(textBoxesRef.current.filter(tb => tb.id !== id))
-  }, [focusedBoxId, syncTextBoxes])
-
   // ── Sticky note operations ────────────────────────────────────────────────
 
   const syncStickyNotes = useCallback((updated: StickyNote[]) => {
@@ -1520,14 +1502,6 @@ export function DrawingCanvas({ initialData, onChange }: DrawingCanvasProps) {
       undoStackRef.current.push([...strokesRef.current])
       strokesRef.current = next; redrawCommitted(); emit(); syncHistory()
     }
-  }, [redrawCommitted, emit, syncHistory])
-
-  const handleClear = useCallback(() => {
-    undoStackRef.current.push([...strokesRef.current])
-    redoStackRef.current = []; strokesRef.current = []; imagesRef.current = []
-    imageCache.current.clear(); textBoxesRef.current = []; stickyNotesRef.current = []
-    setTextBoxes([]); setStickyNotes([]); setFocusedBoxId(null); setFocusedStickyId(null)
-    redrawCommitted(); emit(); syncHistory()
   }, [redrawCommitted, emit, syncHistory])
 
   // ── Zoom ──────────────────────────────────────────────────────────────────
@@ -1790,8 +1764,6 @@ export function DrawingCanvas({ initialData, onChange }: DrawingCanvasProps) {
 
   // self-stretch → 플렉스 컨테이너 너비에 맞게 자동 확장
   const Sep = () => <div className="h-px self-stretch bg-border/70 my-0.5 flex-shrink-0" />
-
-  const focusedBox = textBoxes.find(tb => tb.id === focusedBoxId) ?? null
 
   // ── Render ────────────────────────────────────────────────────────────────
 

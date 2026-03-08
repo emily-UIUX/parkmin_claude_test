@@ -44,22 +44,18 @@ export function NoteEditor({ pageId }: NoteEditorProps) {
     let cancelled = false
     setIsLoading(true)
     setPage(null)
-    supabase
-      .from('pages')
-      .select('*')
-      .eq('id', pageId)
-      .single()
-      .then(({ data }) => {
-        if (cancelled) return
-        if (data) {
-          setPage(data as Page)
-          setTitle(data.title)
-          setPageTitle(data.title)
-          trackPage(pageId)
-        }
-        setIsLoading(false)
-      })
-      .catch(() => { if (!cancelled) setIsLoading(false) })  // 네트워크 에러 시 스피너 무한 방지
+    void Promise.resolve(
+      supabase.from('pages').select('*').eq('id', pageId).single()
+    ).then(({ data }) => {
+      if (cancelled) return
+      if (data) {
+        setPage(data as Page)
+        setTitle(data.title)
+        setPageTitle(data.title)
+        trackPage(pageId)
+      }
+      setIsLoading(false)
+    }).catch(() => { if (!cancelled) setIsLoading(false) })  // 네트워크 에러 시 스피너 무한 방지
     return () => { cancelled = true }
   }, [pageId, setPageTitle])
 
@@ -89,7 +85,7 @@ export function NoteEditor({ pageId }: NoteEditorProps) {
       setPage((prev) => prev ? { ...prev, content: drawingContent as unknown as Record<string, unknown> } : prev)
     } else {
       const drawData = page.content as unknown as DrawingData
-      const plainText = (drawData?.textBoxes ?? []).map(tb => tb.text).filter(Boolean).join(' ')
+      const plainText = (drawData?.textBoxes ?? []).map(tb => tb.html).filter(Boolean).join(' ')
       if (plainText) {
         save({ content: page.content as Record<string, unknown>, plain_text_content: plainText, title: page.title })
       }
@@ -101,12 +97,12 @@ export function NoteEditor({ pageId }: NoteEditorProps) {
     setTitle(newTitle)
     setPageTitle(newTitle)
     const drawData = page?.content as unknown as DrawingData | undefined
-    const plainText = (drawData?.textBoxes ?? []).map(tb => tb.text).filter(Boolean).join(' ')
+    const plainText = (drawData?.textBoxes ?? []).map(tb => tb.html).filter(Boolean).join(' ')
     save({ content: (page?.content || {}) as Record<string, unknown>, plain_text_content: plainText, title: newTitle })
   }
 
   const handleDrawingChange = useCallback((data: DrawingData) => {
-    const plainText = (data.textBoxes ?? []).map(tb => tb.text).filter(Boolean).join(' ')
+    const plainText = (data.textBoxes ?? []).map(tb => tb.html).filter(Boolean).join(' ')
     save({ content: data as unknown as Record<string, unknown>, plain_text_content: plainText, title: titleRef.current })
     setPage((prev) => prev ? { ...prev, updated_at: new Date().toISOString() } : prev)
   }, [save])

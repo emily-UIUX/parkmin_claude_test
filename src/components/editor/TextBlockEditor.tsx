@@ -74,9 +74,10 @@ export function TextBlockEditor({
       // setMathFormula / setMathInputOpen 은 안정적인 React setter → stale closure 없음
       Mathematics.configure({
         inlineOptions: {
-          onClick: (node: { attrs: { latex: string } }, pos: number) => {
+          onClick: (node: unknown, pos: number) => {
+            const mathNode = node as { attrs: { latex: string } }
             editingMathPosRef.current = pos
-            setMathFormula(node.attrs.latex || '')
+            setMathFormula(mathNode.attrs.latex || '')
             setMathInputOpen(true)
           },
         },
@@ -176,7 +177,7 @@ export function TextBlockEditor({
     if (!editor || editor.isFocused) return
     const current = editor.getHTML()
     if (current !== box.html && box.html) {
-      editor.commands.setContent(box.html, false)
+      editor.commands.setContent(box.html, { emitUpdate: false })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [box.html])
